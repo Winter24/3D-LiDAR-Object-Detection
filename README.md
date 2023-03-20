@@ -29,4 +29,4 @@ rviz -d test.rviz
 ## To-Do-List
 - [ ] Robust Detection
 - [ ] Processing Speed Optimization
-- [ ] Get Vehicle Status of OBJ (ex. Velocity, Orientation...)
+- [ ] Get Status of OBJ (ex. Velocity, Orientation...)
