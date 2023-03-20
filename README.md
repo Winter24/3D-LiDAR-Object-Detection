@@ -10,7 +10,7 @@ simple agorithm for lidar object detection
 sudo apt install ros-$release-jsk-rviz-plugins
 ```
 
-2. give to permission <br/>
+2. set permission <br/>
 ```
 chmod +x ransac.cpp
 chmod +x object_detection.py
