@@ -14,7 +14,7 @@ Author : swooeun
 sudo apt install ros-$release-jsk-rviz-plugins
 ```
 
-2. set permission <br/>
+2. set permission (if you need) <br/>
 ```
 chmod +x ransac.cpp
 chmod +x object_detection.py
