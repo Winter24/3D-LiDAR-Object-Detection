@@ -24,7 +24,14 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
+add_executable(detector src/detector.cpp)
+target_link_libraries(
+  detector
+  ${catkin_LIBRARIES}
+)
+
 add_executable(ransac src/ransac.cpp)
-target_link_libraries(ransac
+target_link_libraries(
+  ransac
   ${catkin_LIBRARIES}
 )
