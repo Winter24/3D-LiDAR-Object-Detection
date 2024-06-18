@@ -1,4 +1,0 @@
-<launch>
-    <node pkg="lidar_detection" type="ransac" name="ransac" />
-    <node pkg="lidar_detection" type="object_detetion.py" name="object_detetion" output="screen" />
-</launch>
