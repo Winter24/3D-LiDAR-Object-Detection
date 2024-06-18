@@ -13,7 +13,8 @@ install vision_msgs_rviz_plugins
 ```
 git clone https://github.com/ros-perception/vision_msgs
 ```
-Make sure you selected the right branch that suit your ROS version
+Make sure you selected the right branch that suit your ROS version if you got any trouble 
+(I just clone it from the ROS2 branch, edit cmake a little and the build)
 After that you need to go into ./vision_msgs/vision_msgs_rviz_plugins/ of the vision_msgs_rviz_plugins and change the first line of the cmake file
 ```
 cmake_minimum_required(VERSION 2.8...3.13)
