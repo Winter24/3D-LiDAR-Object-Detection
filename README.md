@@ -11,7 +11,7 @@ This is a ROS2 version for testing my 3d poincloud detection model
 
 install vision_msgs_rviz_plugins
 ```
-git clone https://github.com/NovoG93/vision_msgs_rviz_plugins
+git clone https://github.com/ros-perception/vision_msgs
 ```
 Make sure you selected the right branch that suit your ROS version
 After that you need to go into ./vision_msgs/vision_msgs_rviz_plugins/ of the vision_msgs_rviz_plugins and change the first line of the cmake file
