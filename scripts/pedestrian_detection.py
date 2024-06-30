@@ -24,7 +24,7 @@ class Eval():
     self.image_size = img_size
     self.config = config
 
-class LiDARObjectDetection(Node):
+class LiDARPedestrianDetection(Node):
     def __init__(self):
         super().__init__("lidar_detection_node")
         self.subscription = self.create_subscription(
@@ -105,7 +105,7 @@ class LiDARObjectDetection(Node):
         
 def main(args=None):
     rclpy.init(args=args)
-    detector = LiDARObjectDetection()
+    detector = LiDARPedestrianDetection()
     rclpy.spin(detector)
     detector.destroy_node()
     rclpy.shutdown()

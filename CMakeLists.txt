@@ -33,7 +33,7 @@ install(TARGETS ransac
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(PROGRAMS scripts/object_detection.py
+install(PROGRAMS scripts/pedestrian_detection.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

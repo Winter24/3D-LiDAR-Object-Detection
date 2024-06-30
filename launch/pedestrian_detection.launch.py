@@ -5,8 +5,8 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='lidar_detection',
-            executable='object_detection.py',  
-            name='object_detection',
+            executable='pedestrian_detection.py',  
+            name='pedestrian_detection',
             output='screen'
         )
     ])
