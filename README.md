@@ -1,9 +1,25 @@
-# ROS2 3D-LiDAR-Object-Detection
+<h1 align="center">ROS2 3D-LiDAR-Object-Detection</h1>
 
+<h1 align="center">=========================</h1>
 Original code : swooeun
-This is a ROS2 version for testing my 3d poincloud detection model
+If you want to see this cool guy, here is the link:
+https://github.com/sweunwave
 
-<center><img src="" width="600" height="400"></center>
+With his code, I convert it from ROS1 to ROS2, install some package, add my own code. 
+This is a ROS2 version for testing my 3d poincloud detection model. 
+
+## DBSCAN and RANSAC:
+<p align="center">
+  <img src="https://github.com/Winter24/3D-LiDAR-Object-Detection/blob/main/dbscan%20and%20ransac.jpeg" alt="Centered image" width="600" height="400" />
+</p>
+
+## Pedestrian Detection:
+<p align="center">
+  <img src="https://github.com/Winter24/3D-LiDAR-Object-Detection/blob/main/pedestrian_detection.png" alt="Centered image" width="600" height="400" />
+</p>
+
+<h2 align="center">If you find this repo help, give me a star ;)</h2>
+<h1 align="center">=========================</h1>
 
 ## Install:
 
