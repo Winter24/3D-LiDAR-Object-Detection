@@ -3,13 +3,26 @@ import rclpy
 from rclpy.node import Node
 import numpy as np
 import time
-from sklearn.cluster import DBSCAN
+import torch
+from torch import nn
+import json
 from sensor_msgs_py import point_cloud2 as pc2
+from preprocess import voxelize
+from postprocess import filter_pred
 
 from sensor_msgs.msg import PointCloud2
 from vision_msgs.msg import BoundingBox3D, BoundingBox3DArray
-from std_msgs.msg import Header
-from geometry_msgs.msg import Point32, Pose, Vector3
+
+from core.models.model import CustomModel
+
+class Eval():
+  def __init__(self, data_loader, model, device, img_size, config):
+    self.data_loader = data_loader
+    self.model = model
+    self.model.eval()
+    self.device = device
+    self.image_size = img_size
+    self.config = config
 
 class LiDARObjectDetection(Node):
     def __init__(self):
@@ -19,59 +32,77 @@ class LiDARObjectDetection(Node):
             "/points_raw",
             self.lidar_cb,
             10)
-        self.filtered_pub = self.create_publisher(
-            PointCloud2,
-            "/sw/inRange",
-            10)
+
         self.bbox_pub = self.create_publisher(
             BoundingBox3DArray,
             "/bbox",
             10)
-
-    def lidar_cb(self, msg):
-        start_time = time.time()
-        xyz_array = np.array(list(pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)))
-
-        y_condition = np.logical_and(xyz_array[:, 1] < 4, xyz_array[:, 1] > -4)
-        filtered_data = xyz_array[np.logical_and(y_condition, xyz_array[:, 2] < 3)]
-
-        self.convert_xyz_to_pc2(filtered_data, msg.header)
         
-        # DBSCAN clustering
-        model = DBSCAN(eps=0.8, min_samples=5).fit(filtered_data)
-        labels = model.labels_
+        config_path = "/home/winter24/gcamp_ros2_ws/pointcloud_ros2/scripts/base_demo.json"
+        with open(config_path, 'r') as f:
+            self.config = json.load(f) 
+        self.model = CustomModel(self.config["model"], self.config["data"]["num_classes"])  
+        # Replace MyModel with your actual model class
+        model_path = '/home/winter24/gcamp_ros2_ws/pointcloud_ros2/18epoch'
+        if torch.cuda.is_available():
+            print("cuda")
+            self.device = torch.device("cuda")
+        else: 
+            print("cpu")
+            self.device = torch.device("cpu")
+        model_state_dict = torch.load(model_path, map_location=self.device)
+        self.model.load_state_dict(model_state_dict)
+        self.model.to(self.device)
+        self.model.eval()
+  
+    # Haven't test this function yet 
+    # def yaw_to_quaternion(self, yaw):
+    #     # Helper function to convert a yaw angle (in radians) to a quaternion
+    #     import math
+    #     half_yaw = yaw * 0.5
+    #     cy = math.cos(half_yaw)
+    #     sy = math.sin(half_yaw)
+    #     return (0, 0, sy, cy)
+
+    def extract_bboxes(self, predictions, header):
+        config = self.config['data']['jrdb']
+        out_size_factor = self.config['data']['out_size_factor']
+        thres = 0.5  # Threshold for filtering predictions
+        nms_thres = None  # NMS threshold
         
-        unique_labels = set(labels)
+        boxes = filter_pred(predictions, config, out_size_factor, thres, nms_thres)
         bbox_array = BoundingBox3DArray()
-        bbox_array.header = msg.header
+        bbox_array.header = header
 
-        for k in unique_labels:
-            if k == -1:
-                continue  # Skip noise
-            class_member_mask = (labels == k)
-            cluster = filtered_data[class_member_mask]
+        for box in boxes:
             bbox = BoundingBox3D()
-            bbox.center.position.x = np.mean(cluster[:, 0])
-            bbox.center.position.y = np.mean(cluster[:, 1])
-            bbox.center.position.z = np.mean(cluster[:, 2])
-            bbox.size.x = max(cluster[:, 0]) - min(cluster[:, 0])
-            bbox.size.y = max(cluster[:, 1]) - min(cluster[:, 1])
-            bbox.size.z = max(cluster[:, 2]) - min(cluster[:, 2])
+            bbox.center.position.x, bbox.center.position.y, \
+            bbox.center.position.z = box[2], box[3], 0.0  # Assuming z=0 for simplicity
+            print(bbox.center.position.x, bbox.center.position.y, bbox.center.position.z)
+            bbox.size.x, bbox.size.y, bbox.size.z = box[5], box[4], 2.0  # Fixed height for simplicity
+            # Convert yaw to quaternion (haven't test yet)
+            # quaternion = self.yaw_to_quaternion(box[6])
+            # bbox.orientation.x, bbox.orientation.y, bbox.orientation.z, bbox.orientation.w = quaternion
             bbox_array.boxes.append(bbox)
 
+        return bbox_array
+
+    def lidar_cb(self, msg):
+        # Input
+        start_time = time.time()
+        geometry = self.config['data']['jrdb']['geometry']
+        raw_points = np.array(list(pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)))
+        # Convert to bev 
+        voxel = voxelize(raw_points, geometry) 
+        voxel_tensor = torch.tensor(voxel).float().unsqueeze(0).to(self.device)
+        voxel_tensor = voxel_tensor.permute(0, 3, 1, 2)
+        # Predict and extract to bbox
+        with torch.no_grad():
+            predictions = self.model(voxel_tensor)
+        bbox_array = self.extract_bboxes(predictions, msg.header)
         self.bbox_pub.publish(bbox_array)
-        print(f"Processing time: {time.time() - start_time}s, Length: {len(filtered_data)}")
-
-    def convert_xyz_to_pc2(self, xyz_array, header):
-        point_field_generators = [
-            pc2.PointField(name='x', offset=0, datatype=pc2.PointField.FLOAT32, count=1),
-            pc2.PointField(name='y', offset=4, datatype=pc2.PointField.FLOAT32, count=1),
-            pc2.PointField(name='z', offset=8, datatype=pc2.PointField.FLOAT32, count=1)
-        ]
-        header = Header(frame_id=header.frame_id, stamp=self.get_clock().now().to_msg())
-        pc_msg = pc2.create_cloud(header, point_field_generators, xyz_array)
-        self.filtered_pub.publish(pc_msg)
-
+        print(f"Processing time: {time.time() - start_time}s, Length: {len(voxel)}")
+        
 def main(args=None):
     rclpy.init(args=args)
     detector = LiDARObjectDetection()

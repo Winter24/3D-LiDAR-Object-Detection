@@ -5,7 +5,12 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='lidar_detection',
-            executable='object_detection.py',  
+            executable='ransac',
+            name='ransac'
+        ),
+        Node(
+            package='lidar_detection',
+            executable='DBSCAN.py',  
             name='object_detection',
             output='screen'
         )

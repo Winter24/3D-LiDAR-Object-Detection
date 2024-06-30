@@ -37,6 +37,27 @@ install(PROGRAMS scripts/object_detection.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS scripts/DBSCAN.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS scripts/postprocess.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS scripts/preprocess.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY scripts/core
+  DESTINATION lib/${PROJECT_NAME}
+  FILES_MATCHING PATTERN "*.py"
+)
+
+install(FILES scripts/base_demo.json
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
